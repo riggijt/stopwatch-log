@@ -7,8 +7,8 @@ A software project exploring the use of GPT to assist with
 data analysis, automation, and system workflows.
 
 ## Features
-- ...
-- ...
+- UI with start/stop/log button
+- log tracking time for individual inputs and sum of total inputs 
 
 ## Tech Stack
 - Python
