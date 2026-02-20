@@ -1,37 +1,145 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Stopwatch App</title>
+<meta charset="UTF-8">
+<title>Stopwatch Logger</title>
+
+<style>
+body {
+  font-family: Arial, sans-serif;
+  text-align: center;
+  padding: 40px;
+}
+
+#time {
+  font-size: 48px;
+  margin: 20px 0;
+}
+
+button {
+  padding: 10px 20px;
+  margin: 5px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+#total {
+  margin-top: 20px;
+  font-size: 22px;
+}
+
+#logList {
+  margin-top: 20px;
+  list-style: none;
+  padding: 0;
+}
+
+#logList li {
+  font-family: monospace;
+  margin: 4px 0;
+}
+</style>
 </head>
 <body>
 
-  <h1>Stopwatch Log</h1>
+<h1>Stopwatch Logger</h1>
 
-  <button onclick="startTimer()">Start</button>
-  <button onclick="stopTimer()">Stop</button>
+<div id="time">00:00:00</div>
 
-  <p id="output"></p>
+<button onclick="start()">Start</button>
+<button onclick="stop()">Stop</button>
+<button onclick="logTime()">Log</button>
+
+<div id="total"></div>
+
+<ul id="logList"></ul>
 
 <script>
+let running = false;
+let startTime = null;
+let elapsedTime = 0;
+let interval = null;
+let loggedTimes = [];
 
-async function startTimer() {
-  const res = await fetch("/start", { method: "POST" });
-  document.getElementById("output").innerText = "Timer started...";
-}
-
-async function stopTimer() {
-  const res = await fetch("/stop", { method: "POST" });
-  const data = await res.json();
-
-  if (data.elapsed) {
-    document.getElementById("output").innerText =
-      "Elapsed time: " + data.elapsed + " seconds";
-  } else {
-    document.getElementById("output").innerText = data.error;
+function loadLogs() {
+  const saved = localStorage.getItem("stopwatchLogs");
+  if (saved) {
+    loggedTimes = JSON.parse(saved);
+    loggedTimes.forEach(sec => addLogToUI(sec));
+    updateTotal();
   }
 }
 
+function saveLogs() {
+  localStorage.setItem("stopwatchLogs", JSON.stringify(loggedTimes));
+}
+
+function start() {
+  if (!running) {
+    startTime = Date.now() - elapsedTime;
+    running = true;
+    interval = setInterval(updateClock, 100);
+  }
+}
+
+function stop() {
+  if (running) {
+    elapsedTime = Date.now() - startTime;
+    running = false;
+    clearInterval(interval);
+  }
+}
+
+function logTime() {
+  if (running) stop();
+
+  if (elapsedTime > 0) {
+    const seconds = elapsedTime / 1000;
+    loggedTimes.push(seconds);
+    addLogToUI(seconds);
+    saveLogs();
+  }
+
+  elapsedTime = 0;
+  startTime = null;
+  updateClock();
+  updateTotal();
+}
+
+function updateClock() {
+  if (running) {
+    elapsedTime = Date.now() - startTime;
+  }
+  document.getElementById("time").textContent =
+    formatTime(elapsedTime / 1000);
+}
+
+function updateTotal() {
+  const totalSeconds = loggedTimes.reduce((a, b) => a + b, 0);
+  document.getElementById("total").textContent =
+    "Total: " + formatTime(totalSeconds);
+}
+
+function addLogToUI(seconds) {
+  const li = document.createElement("li");
+  li.textContent = formatTime(seconds);
+  document.getElementById("logList").appendChild(li);
+}
+
+function formatTime(seconds) {
+  const total = Math.floor(seconds);
+  const hrs = Math.floor(total / 3600);
+  const mins = Math.floor((total % 3600) / 60);
+  const secs = total % 60;
+
+  return (
+    String(hrs).padStart(2, "0") + ":" +
+    String(mins).padStart(2, "0") + ":" +
+    String(secs).padStart(2, "0")
+  );
+}
+
+loadLogs();
 </script>
 
 </body>
