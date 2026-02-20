@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Stopwatch App</title>
+</head>
+<body>
+
+  <h1>Stopwatch Log</h1>
+
+  <button onclick="startTimer()">Start</button>
+  <button onclick="stopTimer()">Stop</button>
+
+  <p id="output"></p>
+
+<script>
+
+async function startTimer() {
+  const res = await fetch("/start", { method: "POST" });
+  document.getElementById("output").innerText = "Timer started...";
+}
+
+async function stopTimer() {
+  const res = await fetch("/stop", { method: "POST" });
+  const data = await res.json();
+
+  if (data.elapsed) {
+    document.getElementById("output").innerText =
+      "Elapsed time: " + data.elapsed + " seconds";
+  } else {
+    document.getElementById("output").innerText = data.error;
+  }
+}
+
+</script>
+
+</body>
+</html>
